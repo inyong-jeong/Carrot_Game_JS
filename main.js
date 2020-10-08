@@ -19,6 +19,8 @@ let started = false;
 let score = 0;
 let timer = undefined;
 
+field.addEventListener("click", (event) => onFieldClick(event));
+
 gameBtn.addEventListener("click", () => {
   console.log("log");
   if (started) {
@@ -26,10 +28,13 @@ gameBtn.addEventListener("click", () => {
   } else {
     startGame();
   }
-  started = !started;
 });
-
+popUpRefresh.addEventListener("click", () => {
+  startGame();
+  hidePopUp();
+});
 function startGame() {
+  started = true;
   initGame();
   showStopButton();
   showTimerAndScore();
@@ -47,6 +52,7 @@ function startGameTimer() {
   timer = setInterval(() => {
     if (remainingTimeSec <= 0) {
       clearInterval(timer);
+      finishGame(CARROT_COUNT === score);
       return;
     }
     updateTimerText(--remainingTimeSec);
@@ -63,13 +69,15 @@ function updateTimerText(time) {
   gameTimer.innerText = `${minutes}:${seconds}`;
 }
 function stopGame() {
+  started = false;
+
   stopGameTimer();
   hideGameButton();
   showPopWithText("REPLAY?");
 }
 
 function showStopButton() {
-  const icon = gameBtn.querySelector(".fa-play");
+  const icon = gameBtn.querySelector(".fas");
   icon.classList.add("fa-stop");
   icon.classList.remove("fa-play");
 }
@@ -82,6 +90,9 @@ function showPopWithText(text) {
   popUpText.innerText = text;
   popUp.classList.remove("pop-up--hide");
 }
+function hidePopUp() {
+  popUp.classList.add("pop-up--hide");
+}
 function initGame() {
   //벌레와 당근을 생성한 뒤 field에 추가해줌
   field.innerHTML = "";
@@ -91,6 +102,34 @@ function initGame() {
   addItem("bug", BUG_COUNT, "img/bug.png");
 }
 
+function onFieldClick(event) {
+  if (!started) {
+    return;
+  }
+  const target = event.target;
+  if (target.matches(".carrot")) {
+    //당근
+    target.remove();
+    score++;
+    updateScoreBoard();
+    if (score === CARROT_COUNT) {
+      finishGame(true);
+    }
+  } else if (target.matches(".bug")) {
+    //벌레!!
+    stopGameTimer();
+    finishGame(false);
+  }
+}
+function finishGame(win) {
+  started = false;
+  hideGameButton();
+  showPopWithText(win ? "YOU WON" : "YOU LOST");
+}
+
+function updateScoreBoard() {
+  gameScore.innerText = CARROT_COUNT - score;
+}
 function addItem(className, count, imgPath) {
   const x1 = 0;
   const y1 = 0;
